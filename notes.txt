@@ -1,0 +1,28 @@
+Chapter 05 - Quality Assurance
+- Page Testing
+    - Libraries
+        - Mocha : testing library
+        - Chai : assertion library
+        - Don't forget to copy the respective Mocha and Chai files to a vendor
+          directory.
+    - You don't want tests to always be there; it will slow down the site.
+    - Tests must be written BEFORE any routes are established.
+    - Suites are used to run tests; they contain the test which are run.
+- Cross-page Testing
+    - Cross-page testing involves keeping track of multiple pages and ensuring
+      they are working together.
+    - Zombie.js is a minimal headless browser (i.e. a browser that doesn't show
+      anything but merely acts as a full browser).
+    - In Mocha you can set up suites to run tests which are nearly identical to
+      Java JUnit testing library
+        - setup(): runs before each test
+        - test(): defines a test to run within the suites
+    - When testing asynchronous functions, include the callback function 'done', which
+      will be called at the end of the test to ensure that the function has returned
+      before asserting a value.
+- JSHint is used as a second set of eyes to ensure that nothing is wrong in your JS.
+- LinkChecker is used to make sure that no links on your web app are broken.
+- Grunt combines all forms of testing (save page testing) into a single command.
+    - Grunt requires plugins for each testing library we use (JSHint, Mocha, LinkChecker)
+    - In Gruntfile.js we must first load each plugin, then set the configurations for each,
+      and then finally register the tasks to run.

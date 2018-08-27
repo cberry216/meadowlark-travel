@@ -1,16 +1,25 @@
 // include node modules
 var express = require('express');
-var fortune = require('./lib/fortune.js')
-var handlebars = require('express3-handlebars');
+var fortune = require('./lib/fortune.js');
+var handlebars = require('express-handlebars');
 
 // initialize express app
 var app = express();
 
 // set up handlebars view engine
-handlebars.create({defaultLayout: 'main'});   // by setting a default layout, main.handlebars will be the layout used, by default
+var hbs = handlebars.create({
+    defaultLayout: 'main',
+    helpers: {
+        section: function(name, options) {
+            if(!this._sections) this._sections = {};
+            this._sections[name] = options.fn(this);
+            return null;
+        }
+    }
+});   // by setting a default layout, main.handlebars will be the layout used, by default
 
 // set view engine to handlebars
-app.engine('handlebars', handlebars.engine);
+app.engine('handlebars', hbs.engine);
 app.set('view engine', 'handlebars');
 
 // set port
@@ -19,8 +28,16 @@ app.set('port', process.env.PORT || 3000);
 // establish public directories
 app.use(express.static(__dirname + '/public'));
 
+/********
+| Tests |
+ ********/
+app.use(function(req, res, next) {
+    res.locals.showTests = app.get('env') !== 'production' && req.query.test === '1';    // ?if test=1 show tests
+    next();
+});
+
 /**********
- | Routes |
+| Routes |
  **********/
 
 // route for home page
@@ -30,7 +47,25 @@ app.get('/', function(req, res) {
 
 // route for about page
 app.get('/about', function(req, res) {
-    res.render('about', {fortune: fortune.getFortune()});
+    res.render('about', {
+        fortune: fortune.getFortune(),
+        pageTestScript: '/qa/tests-about.js'
+    });
+});
+
+// route for hood river tour
+app.get('/tours/hood-river', function(req, res) {
+    res.render('tours/hood-river');
+});
+
+// route for oregon coast tour
+app.get('/tours/oregon-coast', function(req, res) {
+    res.render('tours/oregon-coast');
+});
+
+// route for request group rate
+app.get('/tours/request-group-rate', function(req, res) {
+    res.render('tours/request-group-rate');
 });
 
 // route custom 404 page
