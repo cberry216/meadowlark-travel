@@ -17,12 +17,229 @@ Chapter 05 - Quality Assurance
       Java JUnit testing library
         - setup(): runs before each test
         - test(): defines a test to run within the suites
-    - When testing asynchronous functions, include the callback function 'done', which
-      will be called at the end of the test to ensure that the function has returned
-      before asserting a value.
+    - When testing asynchronous functions, include the callback function 'done',
+      which will be called at the end of the test to ensure that the function has
+      returned before asserting a value.
 - JSHint is used as a second set of eyes to ensure that nothing is wrong in your JS.
 - LinkChecker is used to make sure that no links on your web app are broken.
 - Grunt combines all forms of testing (save page testing) into a single command.
-    - Grunt requires plugins for each testing library we use (JSHint, Mocha, LinkChecker)
-    - In Gruntfile.js we must first load each plugin, then set the configurations for each,
-      and then finally register the tasks to run.
+    - Grunt requires plugins for each testing library we use (JSHint, Mocha,
+      LinkChecker)
+    - In Gruntfile.js we must first load each plugin, then set the configurations
+      for each, and then finally register the tasks to run.
+
+Chapter 6 - The Request and Response Objects
+- Parts of the URL
+  - Protocol: the way the request will be transmitted (e.g. http, https).
+  - Host: the host identifies the server (e.g. google.com, 196.23.45.162, localhost).
+  - Port: each server has a set of ports; some ports are special like 80 for HTTP or
+    443 for HTTPS, by default port 80 is used.
+  - Path: used to uniquely identify pages or other resources within the web app (e.g.
+    /about, /index).
+  - Querystring: an optional collection of name value pairs; starts with '?' and each
+    pair is separated by '&' and each pair is URI encoded (meaning no special characters)
+    (e.g. ?test=1, ?q=grunt&first=9).
+  - Fragment: fragments are strictly used by the browser and not by the server; fragments
+    typically are used to move the page to a specific part of the site denoted by an anchor
+    tag (e.g. #history)
+- HTTP Request Methods
+  - When you type a URL, the browser issues a HTTP GET request where the URL in all its glory
+    (host, path, and querystring) is the actual request and is used to navigate the web app.
+  - Browsers will exclusively use GET and POST when communicating with a server.
+- Request Headers
+  - Request headers are the chunks of information that the browser sends to the server, i.e.
+    the preferred language to receive the information in, the type of browser, an other bits
+    of info.
+- Response Headers
+  - Just as the browsers sends data to server, the server will send data back in the form of
+    a response header.
+  - This information can contain, compression method, server information and other, sometimes,
+    secure date.
+  - It is important to prevent secure data reaching hackers therefore you can disable the
+    sending of valuable info by:
+      app.disable('x-powered-by');
+- Internet Media Types
+  - The Content-Type header tells the client how to render the information.
+  - The format of the Content-Type header is an Internet media type
+    Ex: text/html; charset=UTF-8
+  - The Internet Assigned Numbers Authority keeps an official list of internet media
+    types
+- Request Body
+  - GET requests don't have bodies however POST requests do.
+  - The most common media type for POST bodies is application/x-www-form-urlencoded
+  - If the POST needs to support file uploads, the media type is multipart/form-data
+- Parameters
+  - Parameters can come from the querystring, the session, the request body, or the named
+    routing parameters.
+- The Request Object
+  - Commonly named 'req' or 'request'
+  - Starts as an instance of of http.IncomingMessage, a core node object.
+  - Useful properties added by Express:
+    - req.params: array containing named route parameters
+    - req.param(name): returns the named route parameter, or GET or POST parameters. (AVOID!)
+    - req.query: object containing querystring parameters as name/value pairs
+    - req.body: object containing POST parameters; to make req.body available, we need
+      middleware that can parse the body content.
+    - req.route: info about the currently matched route (useful for route debugging).
+    - req.cookies/req.signedCookies: objects containing cookie value passed from the client.
+    - req.headers: the request headers received from the client.
+    - req.accepts([type]): convenience method to determine whether the client accepts a given
+      type or types; useful for writing public APIs.
+    - req.ip: ip of the client.
+    - req.path: the request path (without protocol, host, port, or querystring).
+    - req.host: convenience method that returns the hostname reported by the client (don't use
+      for security purposes).
+    - req.xhr: convenience property that returns true if the request originated from an AJAX call.
+    - req.protocol: protocol used in making this request (http or https).
+    - req.secure: convenience property that returns true if the connection is secure (equivalent to
+      req.protocol === 'https')/
+    - req.url/req.originalUrl: returns path and querystring, and not the protocol, host, or port.
+    - req.acceptedLanguages: convenience method that returns an array of the (human) language the
+      client prefers, in order.
+- The Response Object
+  - Commonly named 'res', 'resp', or 'response'
+  - Starts as an instance of http.ServerResponse, a core Node object.
+  - Useful properties added by Express:
+    - res.status(code):
+    - res.set(name, value):
+    - res.cookie(name, value, [options]), res.clearCookie(name, [options]): sets or clears cookies
+      that will be stored on the client; requires some middleware.
+    - res.redirect([status], url): redirects the browser; default redirect code is 302 (Found).
+    - res.send(body), res.send(status, body): sends a response to the client, with an optional status
+      code; Express defaults to a content type of text/html, can be changed by:
+        res.set('Content-Type', 'text/plain\')
+      before calling res.send.
+    - res.json(json), res.json(status, json): sends JSON to the client with an optional status code.
+    - res.jsonp(json), res.jsonp(status, json): sends JSONP to the client with an optional status
+      code.
+    - res.type(type): convenience method to set the Content-Type header.
+    - res.format(object): allows you to send different content depending on the Accept request header;
+      of primary use in APIs.
+    - res.attachment([filename]), res.download(path, [filename], [callback]): both set a response
+      header called Content-Disposition to attachment; this will prompt the browser to download the
+      content instead of displaying it in browser.
+    - res.sendFile(path, [options], [callback]): will read a file specified by path and send its content
+      to the client; better to use 'static' middleware.
+    - res.links(links): sets the Links response header; has very little use.
+    - res.locals, res.render(view, [locals], callback): res.locals is an object containing default
+      context for rendering views using the configured templating engine; locals in res.render
+      shouldn't be confused with res.locals
+- Boiling it Down
+  - Rendering Content
+    - res.render will render views within layouts
+  - Processing Forms
+    - When processing forms, the information will be in req.body (or req.query); you may use req.xhr
+      to determine if the request was an a AJAX request or a browser request.
+
+Chapter 7 - Templating with Handlebars
+- Templating allows you to create dynamic data within HTML using JavaScript.
+- Handlebars Basics
+  - When you render a template, you pass the templating engine a context object.
+    - Ex: If your context object is {name: 'Buttercup'}, and the template is:
+      <p>Hello, {{name}}!</p>, then {{name}} will be replaced with 'Buttercup'
+    - If you want to pass HTML to the template then you use three curly brackets:
+      - Ex: if context object is: {name: '<b>Buttercup</b>'}, and the template is:
+        <p>Hello, {{{name}}}!</p>, then the output is 'Hello Buttercup'.
+  - Comments
+    - Comments in Handlebars look like: {{! this is a comment}}.
+    - Handlebars comments should be used to comment code that should never be seen by the client,
+      whereas HTML comments comment unimportant comments or code.
+  - Blocks
+    - {{#each <property>}}: will iterate over every item in 'property'.
+    - To access a parent property use {{../<property>}}
+    - In an 'if' or 'else' block the context is a copy of the parent context, so to get back
+      to the original context, youse ../../<property>.
+    - Both 'if' and 'each' have an optional 'else' block that, if there is nothing in the 'each'
+      block, will execute
+    - The 'unless' block acts as the opposite of an 'if' block; it executes only if the argument
+      is false.
+    - {{.}} simply refers to the current context; however there is a helper called {{foo}}, then
+      {{./foo}} refers to a property within the context object.
+  - Server-side Templates
+    - Server-side templates allow you to render HTML before it's sent to the client; this allows
+      the template and the context object to be hidden from the user.
+    - It also supports template caching which increases performance; to enable it use:
+      app.set('view cache', true);
+    - Views and Layouts
+      - A view usually represents a single page but can also represent a portion of an AJAX-loaded
+        page, an email or anything else.
+      - Layouts are special kinds of views that are included in almost all pages, thus reducing having
+        to write repeated code.
+      - Common elements of webpages like headers and footers will live inside a layout.
+      - Views are always rendered before the layout.
+      - If you want to render a view without a layout pass {layout: null} in the context object, and
+        to render with a different layout, replace null with the layout name.
+    - Partials
+      - Partials act as widgets in web apps and live inside the 'views/partials/' subdirectory.
+      - We pass the partials into 'res.locals' which is available to all views; we further place it
+        into 'res.locals.partials'
+      - To include a partials use {{> <partial_name>}}, where partial_name is the file name of the
+        partials.
+    - Sections
+      - Sections are used for when we need a view to inject itself into different parts of the layout.
+  - Client-side Templates
+    - Client-side Handlebars allows us to receive the results from AJAX calls as JSON data, and format
+      it to fit our site.
+    - We can hide client-side templates within other sections that are also hidden.
+
+Chapter 8 - Form Handling
+- Sending Client Data to the Server
+  - You can use the querystring to send data by making a GET request.
+  - You can use the request body to send data by making a POST request.
+  - Both GET and POST are secure if you are using HTTPS
+  - Using GET request, users can see the entire querystring, even hidden inputs, therefore it's better
+    to use POST, however it is also not inherently secure.
+- HTML Forms
+  - Ex: <form action="/process" method="POST">
+          <input type="hidden" name="hush">
+          ...
+        </form>
+  - By default forms use the GET method.
+  - The 'action' attribute specifies the URL that will receive the form when it's posted, else it will
+    be submitted to the same URL the form was loaded from.
+  - In input, 'name' is how the server identifies the field, where 'id' is used for styling.
+  - It is always better to have multiple smaller forms than one large form; forms should contain all
+    the field you'd like submitted and none that you don't.
+  - When the user submits the form, the '/process' URL will be invoked.
+  - Encoding
+    - If no encoding method is supplied, it will default 'application/x-www-form-urlencoded'.
+    - To send files using URL encoding, you're forced to use 'multipart/form-data'.
+  - Different Approaches to Form Handling
+    - When not using AJAX, you must submit the form through the browser which will reload the page.
+    - In doing so, we have two things to worry about 1) what path handles the form (the action) and 2) 
+      what response is sent to the browser.
+      - It is common to use the same path for displaying and processing the form, thus allowing you
+        to omit the 'action', since one uses GET and the other used POST.
+    - Responses to send back to the browser:
+      - Direct HTML response: you can send HTML or a view back to the browser but will cause an error
+        if you reload the page; it can also interfere with bookmarking and the Back button, and
+        therefore it is not recommended.
+      - 302 redirect: 302 means 'Found' and shouldn't be used.
+      - 303 redirect: specifies that the browser should use a GET request when following a 303 redirect,
+        regardless of the original method (this is the recommended way to redirect).
+    - Dealing with redirections:
+      - Redirect to dedicated success/failure pages: requires that you dedicate URLs for appropriate
+        success or failure; this is good for site analytics, you will know how many success and failures
+        that have been submitted; this makes for a lot of maintenance and writing.
+      - Redirect to the original location with a flash message (a popup or something): best used for
+        small forms that are scattered throughout the site; you can redirect to the page the form was
+        originally on; the easiest way is to use a hidden field in the form with the desired URL.
+      - Redirect to a new location with a flash message: large forms generally have their own page,
+        so it is wise to redirect to a site that might follow the progression of the form, e.g. if you
+        have a form to add a vacation to the system, you could redirect to a index page of all vacations.
+- Form Handling with Express
+  - When using GET, all attribute fields will be available on the 'req.query' object.
+    - Ex: if you have an input field with a name attribute of 'email', you can access the value by accessing
+      'req.query.email'.
+  - When using POST, you need the middleware 'body-parse'
+  - Make sure not to redirect with 301, which are permanent.
+  - Handling AJAX Forms
+- File uploads
+  - Two major file handling middlewares are Formidable and BusBoy.
+  - To enable file upload in a form, use the attribute 'enctype="multipart/form-data"'.
+- jQuery File Upload
+  - Sebastian Tschan's jQuery File Upload.
+  - For example, if you were implementing a chat program that supports shared files, you might want to use the
+    ID of the chat room.
+
+Chapter 9 - Cookies and Sessions
